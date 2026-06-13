@@ -112,6 +112,8 @@ function createNoteWindow(note) {
 
   noteWindows.set(note.id, win)
 
+  win.on('focus', () => win.moveTop())
+
   win.on('moved', () => {
     const [x, y] = win.getPosition()
     const n = readNote(note.id)
