@@ -1,0 +1,136 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+}
+
+.drag    { -webkit-app-region: drag; }
+.no-drag { -webkit-app-region: no-drag; }
+
+.note {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg);
+  border-radius: 7px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  color: var(--text);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.28), 0 1px 4px rgba(0,0,0,0.14);
+  border: 1px solid rgba(0,0,0,0.10);
+}
+
+/* Header bar */
+.header {
+  display: flex;
+  align-items: center;
+  background: var(--header);
+  height: 28px;
+  padding: 0 6px;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.tl-spacer { width: 56px; flex-shrink: 0; } /* room for 3 traffic lights */
+
+.title {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  padding: 0 4px;
+  pointer-events: none; /* let double-click pass through to .header */
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: auto;
+}
+
+.btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--text);
+  opacity: 0.55;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: opacity 0.12s, background 0.12s;
+}
+.btn:hover { opacity: 1; background: rgba(0,0,0,0.10); }
+.btn-close { font-size: 18px; }
+
+/* Color picker row */
+.picker {
+  display: flex;
+  gap: 7px;
+  padding: 6px 10px;
+  background: var(--header);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.1s;
+}
+.dot:hover { transform: scale(1.25); }
+.dot.active { border-color: rgba(0,0,0,0.45); }
+
+/* ── macOS-style scrollbar (critical on Windows where default is thick/ugly) ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.45);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Note content */
+.body {
+  flex: 1;
+  width: 100%;
+  padding: 10px 11px;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+  user-select: text;
+  -webkit-app-region: no-drag;
+}
+
+.body::placeholder {
+  color: var(--text);
+  opacity: 0.35;
+}

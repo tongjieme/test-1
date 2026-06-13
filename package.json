@@ -1,0 +1,70 @@
+{
+  "name": "stickies",
+  "version": "0.1.0",
+  "description": "Desktop sticky notes",
+  "main": "main.js",
+  "scripts": {
+    "dev": "concurrently \"vite --config vite.config.js\" \"wait-on http://localhost:5173 && NODE_ENV=development electron .\"",
+    "build": "vite build",
+    "build:win": "vite build && electron-builder --win --x64",
+    "build:win-zip": "vite build && electron-builder --win zip --x64",
+    "build:mac": "vite build && electron-builder --mac",
+    "start": "electron ."
+  },
+  "build": {
+    "appId": "com.stickies.app",
+    "productName": "Stickies",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/dist/**"
+    ],
+    "extraResources": [
+      {
+        "from": ".env.example",
+        "to": ".env.example"
+      }
+    ],
+    "directories": {
+      "output": "dist-electron"
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity"
+    }
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "electron": "^31.7.7",
+    "electron-builder": "^26.15.3",
+    "playwright-core": "^1.60.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.11",
+    "wait-on": "^7.2.0"
+  }
+}
