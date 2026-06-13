@@ -18,6 +18,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "prompt-preload.js",
       "renderer/dist/**"
     ],
     "extraResources": [

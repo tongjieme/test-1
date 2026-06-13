@@ -73,6 +73,38 @@ html, body, #root {
 .btn:hover { opacity: 1; background: rgba(0,0,0,0.10); }
 .btn-close { font-size: 18px; }
 
+/* Group picker */
+.group-picker {
+  display: flex;
+  flex-direction: column;
+  background: var(--header);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.group-item {
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  padding: 5px 10px;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: background 0.1s, opacity 0.1s;
+}
+.group-item:hover { background: rgba(0,0,0,0.08); opacity: 1; }
+.group-item.active { font-weight: 600; opacity: 1; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
+}
+.btn-error { animation: shake 0.3s ease; opacity: 1 !important; color: #c0392b !important; }
+
 /* Color picker row */
 .picker {
   display: flex;

@@ -17,16 +17,19 @@ function useDebounce(fn, delay) {
   }, [fn, delay])
 }
 
-const params  = new URLSearchParams(window.location.search)
-const noteId  = params.get('noteId')
+const params = new URLSearchParams(window.location.search)
+const noteId = params.get('noteId')
 
 export default function App() {
-  const [note, setNote]             = useState(null)
-  const [content, setContent]       = useState('')
-  const [showPicker, setShowPicker] = useState(false)
-  // initialise from URL so window size and React state are in sync from frame 1
-  const [collapsed, setCollapsed]   = useState(params.get('collapsed') === 'true')
-
+  const [note, setNote]               = useState(null)
+  const [content, setContent]         = useState('')
+  const [showPicker, setShowPicker]   = useState(false)
+  const [collapsed, setCollapsed]     = useState(params.get('collapsed') === 'true')
+  const [showGroupPicker, setShowGroupPicker] = useState(false)
+  const [groups, setGroups]           = useState([])
+  const [groupError, setGroupError]   = useState(false)
+  const groupBtnRef = useRef(null)
+  const groupPickerRef = useRef(null)
 
   useEffect(() => {
     if (!noteId) return
@@ -39,6 +42,21 @@ export default function App() {
     return cleanup
   }, [])
 
+  // Close group picker when clicking outside
+  useEffect(() => {
+    if (!showGroupPicker) return
+    function handleClick(e) {
+      if (
+        groupPickerRef.current && !groupPickerRef.current.contains(e.target) &&
+        groupBtnRef.current   && !groupBtnRef.current.contains(e.target)
+      ) {
+        setShowGroupPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showGroupPicker])
+
   const saveContent = useDebounce((text) => {
     window.stickiesAPI.updateNote({ id: noteId, content: text })
   }, 400)
@@ -49,7 +67,14 @@ export default function App() {
     saveContent(text)
   }
 
-  function handleDelete() { window.stickiesAPI.deleteNote(noteId) }
+  async function handleDelete() {
+    const result = await window.stickiesAPI.deleteNote(noteId)
+    if (result?.error === 'last-in-group') {
+      setGroupError(true)
+      setTimeout(() => setGroupError(false), 600)
+    }
+  }
+
   function handleNewNote() { window.stickiesAPI.createNote() }
 
   function handleColorPick(color) {
@@ -61,15 +86,34 @@ export default function App() {
   function handleToggleCollapse() {
     const next = !collapsed
     setCollapsed(next)
-    if (next) setShowPicker(false)
+    if (next) { setShowPicker(false); setShowGroupPicker(false) }
     window.stickiesAPI.setCollapsed({ id: noteId, collapsed: next })
+  }
+
+  async function handleOpenGroupPicker() {
+    if (showGroupPicker) { setShowGroupPicker(false); return }
+    const list = await window.stickiesAPI.getGroups()
+    setGroups(list)
+    setShowGroupPicker(true)
+    setShowPicker(false)
+  }
+
+  async function handleMoveToGroup(targetGroupId) {
+    setShowGroupPicker(false)
+    const result = await window.stickiesAPI.moveToGroup({ id: noteId, targetGroupId })
+    if (result?.error === 'last-in-group') {
+      setGroupError(true)
+      setTimeout(() => setGroupError(false), 600)
+    } else if (result?.ok) {
+      setNote(prev => ({ ...prev, groupId: targetGroupId }))
+    }
   }
 
   if (!note) return null
 
   const c     = COLORS[note.color] || COLORS.yellow
-  // First non-empty line becomes the title; fall back to placeholder
   const title = content.split('\n').find(l => l.trim()) || ''
+  const currentGroupId = note.groupId ?? null
 
   return (
     <div className="note" style={{ '--bg': c.bg, '--header': c.header, '--text': c.text }}>
@@ -79,12 +123,38 @@ export default function App() {
         <span className="title" title={title}>{title || 'New Note'}</span>
 
         <div className="actions no-drag">
-          <button className="btn" title="Color"              onClick={() => setShowPicker(p => !p)}>●</button>
-          <button className="btn" title="Toggle body"        onClick={handleToggleCollapse}>{collapsed ? '▾' : '▴'}</button>
-          <button className="btn" title="New note"           onClick={handleNewNote}>+</button>
-          <button className="btn btn-close" title="Delete"   onClick={handleDelete}>×</button>
+          <button className="btn" title="Color"       onClick={() => { setShowPicker(p => !p); setShowGroupPicker(false) }}>●</button>
+          <button
+            ref={groupBtnRef}
+            className={`btn${groupError ? ' btn-error' : ''}`}
+            title="Move to group"
+            onClick={handleOpenGroupPicker}
+          >⊞</button>
+          <button className="btn" title="Toggle body" onClick={handleToggleCollapse}>{collapsed ? '▾' : '▴'}</button>
+          <button className="btn" title="New note"    onClick={handleNewNote}>+</button>
+          <button className={`btn btn-close${groupError ? ' btn-error' : ''}`} title="Delete" onClick={handleDelete}>×</button>
         </div>
       </div>
+
+      {!collapsed && showGroupPicker && (
+        <div className="group-picker no-drag" ref={groupPickerRef}>
+          <button
+            className={`group-item${currentGroupId === null ? ' active' : ''}`}
+            onClick={() => handleMoveToGroup(null)}
+          >
+            Ungrouped
+          </button>
+          {groups.map(g => (
+            <button
+              key={g.id}
+              className={`group-item${currentGroupId === g.id ? ' active' : ''}`}
+              onClick={() => handleMoveToGroup(g.id)}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {!collapsed && showPicker && (
         <div className="picker no-drag">
