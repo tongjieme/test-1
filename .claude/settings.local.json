@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(tmux new-session *)",
+      "Bash(tmux send-keys *)",
+      "Bash(timeout 40 bash -c 'until tmux capture-pane -t stickies -p | grep -q \"screenshot saved\"; do sleep 0.5; done')",
+      "Bash(tmux capture-pane *)",
+      "Bash(tmux kill-session *)",
+      "Read(//Users/j/Documents/stickies-notes/**)",
+      "Bash(node *)",
+      "Bash(./node_modules/.bin/electron-builder *)",
+      "Bash(git init *)",
+      "Bash(git remote *)"
+    ]
+  },
+  "disabledMcpjsonServers": [
+    "playwright"
+  ]
+}
