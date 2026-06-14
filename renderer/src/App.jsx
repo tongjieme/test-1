@@ -26,10 +26,15 @@ export default function App() {
   const [showPicker, setShowPicker]   = useState(false)
   const [collapsed, setCollapsed]     = useState(params.get('collapsed') === 'true')
   const [showGroupPicker, setShowGroupPicker] = useState(false)
+  const [showTypePicker, setShowTypePicker]   = useState(false)
   const [groups, setGroups]           = useState([])
   const [groupError, setGroupError]   = useState(false)
-  const groupBtnRef = useRef(null)
+  const [pathEditing, setPathEditing] = useState(false)
+
+  const groupBtnRef    = useRef(null)
   const groupPickerRef = useRef(null)
+  const typeBtnRef     = useRef(null)
+  const typePickerRef  = useRef(null)
 
   useEffect(() => {
     if (!noteId) return
@@ -49,13 +54,24 @@ export default function App() {
       if (
         groupPickerRef.current && !groupPickerRef.current.contains(e.target) &&
         groupBtnRef.current   && !groupBtnRef.current.contains(e.target)
-      ) {
-        setShowGroupPicker(false)
-      }
+      ) setShowGroupPicker(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [showGroupPicker])
+
+  // Close type picker when clicking outside
+  useEffect(() => {
+    if (!showTypePicker) return
+    function handleClick(e) {
+      if (
+        typePickerRef.current && !typePickerRef.current.contains(e.target) &&
+        typeBtnRef.current    && !typeBtnRef.current.contains(e.target)
+      ) setShowTypePicker(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [showTypePicker])
 
   const saveContent = useDebounce((text) => {
     window.stickiesAPI.updateNote({ id: noteId, content: text })
@@ -75,7 +91,10 @@ export default function App() {
     }
   }
 
-  function handleNewNote() { window.stickiesAPI.createNote() }
+  function handleNewNote(type) {
+    setShowTypePicker(false)
+    window.stickiesAPI.createNote(type)
+  }
 
   function handleColorPick(color) {
     window.stickiesAPI.setColor({ id: noteId, color })
@@ -86,7 +105,7 @@ export default function App() {
   function handleToggleCollapse() {
     const next = !collapsed
     setCollapsed(next)
-    if (next) { setShowPicker(false); setShowGroupPicker(false) }
+    if (next) { setShowPicker(false); setShowGroupPicker(false); setShowTypePicker(false) }
     window.stickiesAPI.setCollapsed({ id: noteId, collapsed: next })
   }
 
@@ -96,6 +115,7 @@ export default function App() {
     setGroups(list)
     setShowGroupPicker(true)
     setShowPicker(false)
+    setShowTypePicker(false)
   }
 
   async function handleMoveToGroup(targetGroupId) {
@@ -109,21 +129,30 @@ export default function App() {
     }
   }
 
+  function handlePathBlur() {
+    setPathEditing(false)
+  }
+
+  function handleOpenPath(filePath) {
+    window.stickiesAPI.openPath(filePath)
+  }
+
   if (!note) return null
 
   const c     = COLORS[note.color] || COLORS.yellow
   const title = content.split('\n').find(l => l.trim()) || ''
   const currentGroupId = note.groupId ?? null
+  const isPath = note.type === 'path'
 
   return (
     <div className="note" style={{ '--bg': c.bg, '--header': c.header, '--text': c.text }}>
       <div className="header drag">
         <span className="tl-spacer" />
 
-        <span className="title" title={title}>{title || 'New Note'}</span>
+        <span className="title" title={title}>{title || (isPath ? 'Path Note' : 'New Note')}</span>
 
         <div className="actions no-drag">
-          <button className="btn" title="Color"       onClick={() => { setShowPicker(p => !p); setShowGroupPicker(false) }}>●</button>
+          <button className="btn" title="Color"       onClick={() => { setShowPicker(p => !p); setShowGroupPicker(false); setShowTypePicker(false) }}>●</button>
           <button
             ref={groupBtnRef}
             className={`btn${groupError ? ' btn-error' : ''}`}
@@ -131,7 +160,12 @@ export default function App() {
             onClick={handleOpenGroupPicker}
           >⊞</button>
           <button className="btn" title="Toggle body" onClick={handleToggleCollapse}>{collapsed ? '▾' : '▴'}</button>
-          <button className="btn" title="New note"    onClick={handleNewNote}>+</button>
+          <button
+            ref={typeBtnRef}
+            className="btn"
+            title="New note"
+            onClick={() => { setShowTypePicker(p => !p); setShowPicker(false); setShowGroupPicker(false) }}
+          >+</button>
           <button className={`btn btn-close${groupError ? ' btn-error' : ''}`} title="Delete" onClick={handleDelete}>×</button>
         </div>
       </div>
@@ -141,18 +175,21 @@ export default function App() {
           <button
             className={`group-item${currentGroupId === null ? ' active' : ''}`}
             onClick={() => handleMoveToGroup(null)}
-          >
-            Ungrouped
-          </button>
+          >Ungrouped</button>
           {groups.map(g => (
             <button
               key={g.id}
               className={`group-item${currentGroupId === g.id ? ' active' : ''}`}
               onClick={() => handleMoveToGroup(g.id)}
-            >
-              {g.name}
-            </button>
+            >{g.name}</button>
           ))}
+        </div>
+      )}
+
+      {!collapsed && showTypePicker && (
+        <div className="type-picker no-drag" ref={typePickerRef}>
+          <button className="type-item" onClick={() => handleNewNote('text')}>Text Note</button>
+          <button className="type-item" onClick={() => handleNewNote('path')}>Path Note</button>
         </div>
       )}
 
@@ -169,7 +206,38 @@ export default function App() {
         </div>
       )}
 
-      {!collapsed && (
+      {!collapsed && isPath && !pathEditing && (
+        <div
+          className="path-list no-drag"
+          onDoubleClick={() => setPathEditing(true)}
+        >
+          {content.split('\n').filter(l => l.trim()).length === 0 ? (
+            <div className="path-empty">Double-click to add paths…</div>
+          ) : (
+            content.split('\n').filter(l => l.trim()).map((line, i) => (
+              <button
+                key={i}
+                className="path-item"
+                title={line.trim()}
+                onClick={() => handleOpenPath(line.trim())}
+              >{line.trim()}</button>
+            ))
+          )}
+        </div>
+      )}
+
+      {!collapsed && isPath && pathEditing && (
+        <textarea
+          className="body no-drag"
+          value={content}
+          onChange={handleChange}
+          placeholder="One path per line…"
+          autoFocus
+          onBlur={handlePathBlur}
+        />
+      )}
+
+      {!collapsed && !isPath && (
         <textarea
           className="body no-drag"
           value={content}

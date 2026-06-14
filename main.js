@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, globalShortcut, nativeImage, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu, Tray, globalShortcut, nativeImage, dialog, shell } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { v4: uuidv4 } = require('uuid')
@@ -248,10 +248,11 @@ function createNoteWindow(note) {
   return win
 }
 
-function createNewNote() {
+function createNewNote(type = 'text') {
   const existing = noteWindows.size
   const note = {
     id: uuidv4(),
+    type,
     content: '',
     color: 'yellow',
     groupId: activeGroupId,
@@ -430,7 +431,9 @@ ipcMain.handle('get-note', (_, id) => readNote(id))
 
 ipcMain.handle('get-groups', () => readGroups())
 
-ipcMain.handle('create-note', () => createNewNote())
+ipcMain.handle('create-note', (_, type = 'text') => createNewNote(type))
+
+ipcMain.handle('open-path', (_, filePath) => shell.openPath(filePath))
 
 ipcMain.handle('delete-note', (_, id) => {
   const note = readNote(id)

@@ -73,6 +73,64 @@ html, body, #root {
 .btn:hover { opacity: 1; background: rgba(0,0,0,0.10); }
 .btn-close { font-size: 18px; }
 
+/* Type picker */
+.type-picker {
+  display: flex;
+  flex-direction: column;
+  background: var(--header);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.type-item {
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  padding: 5px 10px;
+  cursor: pointer;
+  opacity: 0.75;
+  transition: background 0.1s, opacity 0.1s;
+}
+.type-item:hover { background: rgba(0,0,0,0.08); opacity: 1; }
+
+/* Path list */
+.path-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 4px;
+}
+
+.path-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Consolas', 'Menlo', monospace;
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+  transition: background 0.1s, opacity 0.1s;
+}
+.path-item:hover { background: rgba(0,0,0,0.08); opacity: 1; }
+
+.path-empty {
+  padding: 10px;
+  font-size: 12px;
+  opacity: 0.4;
+  text-align: center;
+  cursor: default;
+  user-select: none;
+}
+
 /* Group picker */
 .group-picker {
   display: flex;

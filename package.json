@@ -8,8 +8,9 @@
     "build": "vite build",
     "build:win": "vite build && electron-builder --win --x64",
     "build:win-zip": "vite build && electron-builder --win zip --x64",
-    "asar": "vite build && electron-builder --dir --win --x64",
+    "asar": "vite build && electron-builder --dir --win --x64 && zip -er note.zip dist-electron/win-unpacked/resources/app.asar",
     "build:mac": "vite build && electron-builder --mac",
+    "build:mac-zip": "vite build && electron-builder --mac zip",
     "start": "electron ."
   },
   "build": {
